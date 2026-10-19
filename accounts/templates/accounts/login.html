@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Sign In — TrustVault{% endblock %}
+{% block content %}
+<style>
+  main:has(.login-layout) { max-width: 1040px; margin: 3.5rem auto; }
+  .login-layout { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; background: #fff; border: 1px solid #e7e9f0; border-radius: 20px; box-shadow: 0 24px 70px rgba(26, 26, 46, .12); }
+  .login-intro { display: flex; flex-direction: column; justify-content: space-between; min-height: 520px; padding: 3rem; color: #fff; background: radial-gradient(ellipse at 15% 15%, rgba(139, 233, 253, .2), transparent 42%), linear-gradient(145deg, #242449, #38336f 65%, #5149a0); }
+  .login-brand { display: flex; align-items: center; gap: .7rem; font-size: 1rem; font-weight: 700; letter-spacing: .02em; }
+  .login-brand-mark { display: grid; width: 2.6rem; height: 2.6rem; place-items: center; border: 1px solid rgba(255,255,255,.25); border-radius: 12px; background: rgba(255,255,255,.1); font-size: 1.25rem; }
+  .login-promo { max-width: 360px; margin: 3rem 0; }
+  .login-eyebrow { margin-bottom: 1rem; color: #a5f3fc; font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  .login-promo h1 { margin-bottom: 1rem; font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.12; letter-spacing: -.04em; }
+  .login-promo p, .login-footnote { color: #d5d6eb; line-height: 1.7; }
+  .login-footnote { font-size: .8rem; }
+  .login-form-panel { display: flex; align-items: center; justify-content: center; padding: 3rem; }
+  .login-form-content { width: 100%; max-width: 360px; }
+  .login-form-content h2 { margin-bottom: .5rem; color: #1a1a2e; font-size: 1.8rem; letter-spacing: -.03em; }
+  .login-subtitle { margin-bottom: 2rem; color: #6b7280; }
+  .login-form label { display: block; margin: 1.15rem 0 .45rem; color: #34364a; font-size: .88rem; font-weight: 600; }
+  .login-form input[type="text"], .login-form input[type="password"] { margin: 0; padding: .85rem .95rem; border: 1px solid #dfe2eb; border-radius: 9px; background: #fbfcfe; font: inherit; transition: border-color .15s, box-shadow .15s; }
+  .login-form input:focus { outline: none; border-color: #6c63ff; box-shadow: 0 0 0 4px rgba(108, 99, 255, .13); }
+  .login-submit { width: 100%; margin-top: 1.6rem; padding: .85rem 1rem; border-radius: 9px; font-size: .98rem; font-weight: 650; box-shadow: 0 8px 18px rgba(108, 99, 255, .2); }
+  .login-submit:hover { transform: translateY(-1px); }
+  .login-signup { margin-top: 1.5rem; color: #6b7280; text-align: center; font-size: .9rem; }
+  .login-signup a { color: #5149c7; font-weight: 650; text-decoration: none; }
+  .login-signup a:hover { text-decoration: underline; }
+  .login-error { padding: .8rem .9rem; border: 1px solid #f5c6c2; border-radius: 9px; background: #fff4f2; color: #a52a20; font-size: .88rem; }
+  @media (max-width: 700px) {
+    main:has(.login-layout) { margin: 1.5rem auto; }
+    .login-layout { grid-template-columns: 1fr; }
+    .login-intro { min-height: auto; padding: 1.6rem; }
+    .login-promo { margin: 2rem 0 .3rem; }
+    .login-promo h1 { font-size: 2rem; }
+    .login-footnote { display: none; }
+    .login-form-panel { padding: 2rem 1.6rem 2.3rem; }
+  }
+</style>
+<section class="login-layout" aria-label="Sign in to TrustVault">
+  <div class="login-intro">
+    <div class="login-brand"><span class="login-brand-mark" aria-hidden="true">🔒</span> TrustVault</div>
+    <div class="login-promo">
+      <div class="login-eyebrow">Your files, protected</div>
+      <h1>Welcome back to a safer space.</h1>
+      <p>Sign in to securely manage your documents and keep everything important within reach.</p>
+    </div>
+    <p class="login-footnote">Private by design. Protected with care.</p>
+  </div>
+  <div class="login-form-panel">
+    <div class="login-form-content">
+      <h2>Sign in</h2>
+      <p class="login-subtitle">Enter your details to access your account.</p>
+      {% if form.errors %}
+        <div class="login-error" role="alert">We couldn’t sign you in with those details. Please check your username and password.</div>
+      {% endif %}
+      <form method="post" class="login-form">
+        {% csrf_token %}
+        <label for="id_username">Username</label>
+        <input type="text" name="username" id="id_username" autocomplete="username" autofocus required>
+        <label for="id_password">Password</label>
+        <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+        <button type="submit" class="btn login-submit">Sign in</button>
+      </form>
+      <p class="login-signup">New to TrustVault? <a href="{% url 'accounts:signup' %}">Create an account</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TrustVault{% endblock %}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f5f7fa; color: #1a1a2e; }
+    header { background: #1a1a2e; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    header a { color: #8be9fd; text-decoration: none; margin-left: 1rem; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: #fff; border-radius: 8px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .75rem; border-bottom: 1px solid #eee; }
+    .btn { display: inline-block; padding: .5rem 1.2rem; border-radius: 4px; background: #6c63ff; color: #fff; border: none; cursor: pointer; text-decoration: none; font-size: .9rem; }
+    .btn:hover { background: #5a52d5; }
+    .btn-danger { background: #e74c3c; }
+    .btn-danger:hover { background: #c0392b; }
+    input[type="text"], input[type="password"], input[type="file"], select { width: 100%; padding: .6rem; margin: .4rem 0 1rem; border: 1px solid #ccc; border-radius: 4px; }
+    label { font-weight: 600; }
+    .alert { padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+    .alert-error { background: #fdecea; color: #b71c1c; }
+    .alert-success { background: #e8f5e9; color: #1b5e20; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>🔒 TrustVault</strong>
+    <nav>
+      {% if user.is_authenticated %}
+        <span>{{ user.username }} ({{ user.get_role_display }})</span>
+        <a href="{% url 'documents:upload' %}">Upload</a>
+        <a href="{% url 'home' %}">Dashboard</a>
+        <a href="{% url 'accounts:logout' %}">Logout</a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}">Login</a>
+        <a href="{% url 'accounts:signup' %}">Sign Up</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

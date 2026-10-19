@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Share "{{ document.title }}" — TrustVault{% endblock %}
+{% block content %}
+<div class="card" style="max-width:520px;">
+  <h2 style="margin-bottom:1rem;">Share "{{ document.title }}"</h2>
+  {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <label for="username">Grant access to username</label>
+    <input type="text" name="username" id="username" required>
+    <button type="submit" class="btn" style="margin-top:.5rem;">Grant Access</button>
+  </form>
+</div>
+{% endblock %}

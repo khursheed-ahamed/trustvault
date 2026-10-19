@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — TrustVault{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Your Documents</h2>
+  {% if documents %}
+  <table>
+    <thead>
+      <tr><th>Title</th><th>Owner</th><th>Uploaded</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for doc in documents %}
+      <tr>
+        <td>{{ doc.title }}</td>
+        <td>{{ doc.owner.username }}</td>
+        <td>{{ doc.uploaded_at|date:"Y-m-d H:i" }}</td>
+        <td>
+          <a href="{% url 'documents:download' doc.pk %}" class="btn">Download</a>
+          {% if doc.owner == user or user.is_admin_role %}
+            <a href="{% url 'documents:grant_access' doc.pk %}" class="btn" style="background:#27ae60;">Share</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p style="padding:1rem 0;color:#888;">No documents yet. <a href="{% url 'documents:upload' %}">Upload one</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}
