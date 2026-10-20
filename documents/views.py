@@ -14,7 +14,8 @@ from .models import Document, DocumentPermission
 def dashboard(request):
     """Show documents the current user may access."""
     user = request.user
-    if user.is_admin_role:
+    is_admin = user.is_admin_role() if callable(getattr(user, "is_admin_role", None)) else getattr(user, "is_admin_role", False)
+    if is_admin:
         documents = Document.objects.all()
     else:
         documents = Document.objects.filter(
@@ -91,7 +92,8 @@ def grant_access(request, pk):
     user = request.user
 
     # Only the owner or an admin can grant access
-    if document.owner != user and not user.is_admin_role:
+    is_admin = user.is_admin_role() if callable(getattr(user, "is_admin_role", None)) else getattr(user, "is_admin_role", False)
+    if document.owner != user and not is_admin:
         raise PermissionDenied
 
     if request.method == "POST":

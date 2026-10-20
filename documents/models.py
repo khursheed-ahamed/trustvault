@@ -32,7 +32,10 @@ class Document(models.Model):
         """
         if not user.is_authenticated:
             return False
-        if user.is_admin_role:
+        if callable(getattr(user, "is_admin_role", None)):
+            if user.is_admin_role():
+                return True
+        elif getattr(user, "is_admin_role", False):
             return True
         if self.owner_id == user.pk:
             return True
