@@ -3,27 +3,71 @@ from django.db import models
 
 
 class AuditEvent(models.Model):
-    """Immutable log entry for security-relevant actions."""
+    """
+    Immutable audit log model recording all critical security and document events.
+    """
 
-    user = models.ForeignKey(
+    # Event types
+    UPLOAD = "UPLOAD"
+    VIEW = "VIEW"
+    DOWNLOAD = "DOWNLOAD"
+    UPDATE = "UPDATE"
+    DELETE = "DELETE"
+    PERMISSION_GRANTED = "PERMISSION_GRANTED"
+    PERMISSION_REVOKED = "PERMISSION_REVOKED"
+    ACCESS_DENIED = "ACCESS_DENIED"
+
+    EVENT_TYPE_CHOICES = [
+        (UPLOAD, "Upload"),
+        (VIEW, "View"),
+        (DOWNLOAD, "Download"),
+        (UPDATE, "Update"),
+        (DELETE, "Delete"),
+        (PERMISSION_GRANTED, "Permission Granted"),
+        (PERMISSION_REVOKED, "Permission Revoked"),
+        (ACCESS_DENIED, "Access Denied"),
+    ]
+
+    # Outcomes
+    SUCCESS = "SUCCESS"
+    DENIED = "DENIED"
+    FAILURE = "FAILURE"
+
+    OUTCOME_CHOICES = [
+        (SUCCESS, "Success"),
+        (DENIED, "Denied"),
+        (FAILURE, "Failure"),
+    ]
+
+    actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="audit_events",
     )
-    action = models.CharField(
-        max_length=50,
-        help_text="e.g. login, upload, download, download_denied, grant_access",
+    document = models.ForeignKey(
+        "documents.Document",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="audit_events",
     )
-    resource_type = models.CharField(max_length=50, blank=True)
-    resource_id = models.PositiveIntegerField(null=True, blank=True)
-    detail = models.TextField(blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    event_type = models.CharField(
+        max_length=30,
+        choices=EVENT_TYPE_CHOICES,
+    )
+    outcome = models.CharField(
+        max_length=10,
+        choices=OUTCOME_CHOICES,
+    )
+    details = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-timestamp"]
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"[{self.timestamp:%Y-%m-%d %H:%M}] {self.action} by {self.user}"
+        actor_name = self.actor.username if self.actor else "Anonymous/System"
+        doc_title = self.document.title if self.document else "No Document"
+        return f"[{self.created_at:%Y-%m-%d %H:%M:%S}] {self.event_type} - {self.outcome} (Actor: {actor_name}, Doc: {doc_title})"
