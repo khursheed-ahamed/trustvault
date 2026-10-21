@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Document — TrustVault{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 520px;">
+    <h2>Upload Document</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <p>
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            {{ form.title }}
+            {{ form.title.errors }}
+        </p>
+
+        <p>
+            <label for="{{ form.category.id_for_label }}">Category</label>
+            {{ form.category }}
+            {{ form.category.errors }}
+        </p>
+
+        <p>
+            <label for="{{ form.file.id_for_label }}">File</label>
+            {{ form.file }}
+            {{ form.file.errors }}
+        </p>
+
+        <button type="submit" class="btn">Upload Document</button>
+    </form>
+</div>
+{% endblock %}
