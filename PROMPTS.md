@@ -99,3 +99,47 @@
 **How I tested it:** Made a viewer without permission request an owner’s document, checked for HTTP `403`, and confirmed that an audit event was created.
 
 **Commit:** Add the GitHub commit link after committing this work.
+
+## 2026-10-21 — Secure upload and download pages
+
+**Prompt:** Asked AI to generate Django pages for secure upload, document details, download, permission grants, and revocation.
+
+**AI output:** Suggested Django forms, protected Django views, and templates for the user-facing document workflow.
+
+**What I did:** Added owner-only upload, an authorized document dashboard, protected document details, protected download, permission grant, and permission revocation features.
+
+**What I checked:** Confirmed that access decisions happen in Django views through `can_access_document()` and not only by hiding buttons in templates.
+
+**Commit:** Add the GitHub commit link after committing this work.
+
+---
+
+## 2026-10-21 — PDF download investigation
+
+**Prompt:** Asked why a downloaded PDF did not open in its original format.
+
+**AI output:** Initially reviewed the secure download view and confirmed it used `FileResponse`.
+
+**What was wrong or incomplete:** The download code was not the cause. The test files were mock text bytes named with a `.pdf` extension, not real valid PDF files.
+
+**What I did instead:** Kept the secure `FileResponse` download implementation and tested manual uploads using a genuine PDF file from the computer.
+
+**What I checked:** Confirmed the download route does not use a public file URL and returns the stored file bytes through Django.
+
+**Commit:** Add the GitHub commit link after committing this work.
+
+---
+
+## 2026-10-21 — Upload-template mismatch
+
+**Prompt:** Asked AI to inspect the upload page after checking document download behavior.
+
+**AI output:** Identified that the view expected `documents/document_upload.html`, but an existing template was named `upload.html`.
+
+**What was wrong:** The template also used a `description` field while the Django upload form expects `category`.
+
+**What I did instead:** Renamed the template to match the view and changed the form fields to `title`, `category`, and `file`.
+
+**What I checked:** Confirmed the upload form uses `enctype="multipart/form-data"` so the browser sends the selected file correctly.
+
+**Commit:** Add the GitHub commit link after committing this work.

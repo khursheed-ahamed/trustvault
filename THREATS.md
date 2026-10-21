@@ -152,3 +152,43 @@ TrustVault must ensure that only explicitly authorised users can access a docume
 **Test:** Confirm normal users cannot access the audit dashboard. Confirm Django admin does not offer add, edit, or delete actions for audit events.
 
 **Residual risk:** A person with direct database administration access may still alter records. This limitation is documented and will be strengthened later if time permits.
+
+## Threat 12 — A fake or dangerous file is uploaded with a `.pdf` extension
+
+**Attack:** A user renames a non-PDF file, executable, or malformed content to end in `.pdf` and uploads it.
+
+**Impact:** The platform may store a file that is not the claimed type. Users may download a file that does not open as expected or may be unsafe to open.
+
+**Current mitigation:** TrustVault checks the file extension and maximum file size before saving the upload.
+
+**Known limitation:** Extension validation alone does not prove that the bytes are a valid PDF, DOCX, or TXT file. The automated tests currently use mock bytes with a `.pdf` filename; those files are intentionally not valid PDFs and should not be used for manual PDF-reader testing.
+
+**Planned improvement:** Add MIME-type and file-signature validation where practical, and consider malware scanning in a production deployment.
+
+---
+
+## Threat 13 — Direct file-storage access bypasses the application
+
+**Attack:** A user attempts to use a guessed, saved, or leaked storage path instead of the protected Django download route.
+
+**Impact:** The user could bypass permission checks and download a confidential file.
+
+**Mitigation:** The application does not display `document.file.url`, does not create public media routes, and serves file bytes only through `secure_document_download`, which performs a fresh server-side authorization check.
+
+**Test:** Verify dashboard and document-detail HTML do not include a storage path or media URL. Verify an unauthorized request to the protected download route receives `403 Forbidden`.
+
+**Residual risk:** Production storage must be configured as private. A public cloud-storage bucket would defeat this control.
+
+---
+
+## Threat 14 — Permission revocation does not take effect immediately
+
+**Attack:** A viewer keeps using a prior document link after their permission has been revoked.
+
+**Impact:** A former recipient can continue reading confidential content.
+
+**Mitigation:** The revoke operation sets `revoked_at`. Every subsequent detail and download request checks the currently active permission record through `can_access_document()`.
+
+**Test:** Grant `READ` permission, confirm download succeeds, revoke through the owner-only POST route, then verify the viewer’s next detail and download requests return `403 Forbidden`.
+
+**Residual risk:** A user may retain a file they downloaded before access was revoked. The system cannot delete copies already stored on that user’s device.
