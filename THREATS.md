@@ -114,3 +114,41 @@ TrustVault must ensure that only explicitly authorised users can access a docume
 **Mitigation:** Store secrets in `.env`, add `.env` to `.gitignore`, use Django’s password hashing through `set_password()`, and commit only `.env.example`.
 
 **Test:** Check `git status` before every push and confirm `.env` is not included.
+
+## Threat 9 — Permission check missing from a new route
+
+**Attack:** A developer adds a new document route, such as a download, edit, preview, or search route, but forgets to call the central permission function.
+
+**Impact:** A logged-in user could access confidential document content or metadata.
+
+**Mitigation:** Every document route must call `can_access_document()` on the Django server before returning document data. The application must not trust hidden buttons or frontend checks.
+
+**Test:** Tests cover permitted and denied document-detail access. Day 4 will add equivalent tests for download, grant, and revoke routes.
+
+**Residual risk:** Developers must continue using the central function for every new protected route.
+
+---
+
+## Threat 10 — A user grants themselves permission
+
+**Attack:** A viewer attempts to create a permission record that gives themselves `READ` or `EDIT` access to a document.
+
+**Impact:** The viewer gains unauthorised access.
+
+**Mitigation:** Only the document owner can create, change, or revoke document permissions. The model also prevents owners from granting permissions to themselves.
+
+**Test:** A non-owner attempts to create or revoke a permission and must receive `403 Forbidden`.
+
+---
+
+## Threat 11 — Audit records are changed or removed
+
+**Attack:** A normal user attempts to alter or delete an audit event to hide their activity.
+
+**Impact:** The system can no longer reliably show what happened.
+
+**Mitigation:** Audit events have no normal user-facing edit or delete route. In Django admin, audit records are read-only and only administrators can view them.
+
+**Test:** Confirm normal users cannot access the audit dashboard. Confirm Django admin does not offer add, edit, or delete actions for audit events.
+
+**Residual risk:** A person with direct database administration access may still alter records. This limitation is documented and will be strengthened later if time permits.

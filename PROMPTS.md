@@ -55,3 +55,47 @@
 **How I will test it:** An automated test will make Viewer B request Owner A’s private document and must receive `403 Forbidden`.
 
 **Commit:** Add the GitHub commit link after this security feature is implemented.
+
+## 2026-10-21 — Document permission model
+
+**Prompt:** Asked AI to generate Django models for documents and named permissions.
+
+**AI output:** Proposed a `DocumentPermission` model with `READ` and `EDIT` permissions.
+
+**What I did:** Added a permission record for one named user and one document, including who granted it, when it was granted, and when it was revoked.
+
+**What I checked:** Confirmed one user cannot have duplicate permission records for the same document.
+
+**Commit:** Add the GitHub commit link after committing this work.
+
+---
+
+## 2026-10-21 — Server-side authorization
+
+**Prompt:** Asked AI to create the central document-access rule.
+
+**AI output:** Suggested a `can_access_document(user, document, action)` function.
+
+**Potential problem identified:** An authorization check only on a document webpage would not protect other routes, such as downloads, edits, or future API endpoints.
+
+**What I did instead:** Created one server-side authorization function. The document owner has full access; an active `READ` permission allows reading only; an active `EDIT` permission allows reading and editing. No one else has access.
+
+**How I tested it:** Tested owner access, no-permission denial, `READ` access, `EDIT` access, and revoked-access denial.
+
+**Commit:** Add the GitHub commit link after committing this work.
+
+---
+
+## 2026-10-21 — Denied-access audit logging
+
+**Prompt:** Asked AI how to audit unauthorized document attempts.
+
+**AI output:** Suggested recording denied access in an `AuditEvent`.
+
+**Potential problem identified:** If a denied request only returns `403 Forbidden` without an audit record, the administrator cannot later prove that the access attempt occurred.
+
+**What I did instead:** Added `record_access_denied()` to create an audit event with `ACCESS_DENIED`, `DENIED`, the attempted action, the user, and the document.
+
+**How I tested it:** Made a viewer without permission request an owner’s document, checked for HTTP `403`, and confirmed that an audit event was created.
+
+**Commit:** Add the GitHub commit link after committing this work.
