@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Document — TrustVault{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px; margin: 2rem auto;">
+  <h2>Upload New Document</h2>
+  <p style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.95rem;">
+    Files are stored in encrypted server-side directories and are never publicly accessible.
+  </p>
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-error">
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" action="{% url 'document_upload' %}">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="{{ form.title.id_for_label }}">Document Title *</label>
+      {{ form.title }}
+      {% if form.title.errors %}
+        <div class="errorlist">{{ form.title.errors }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.category.id_for_label }}">Category (Optional)</label>
+      {{ form.category }}
+      {% if form.category.errors %}
+        <div class="errorlist">{{ form.category.errors }}</div>
+      {% endif %}
+      <div class="form-text">e.g. Legal, HR, Engineering, Financial</div>
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.file.id_for_label }}">Select File *</label>
+      {{ form.file }}
+      {% if form.file.errors %}
+        <div class="errorlist">{{ form.file.errors }}</div>
+      {% endif %}
+      <div class="form-text">
+        Allowed formats: <strong>.pdf, .txt, .docx</strong> (Maximum size: 10 MB)
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+      <button type="submit" class="btn">
+        Upload Document
+      </button>
+      <a href="{% url 'document_dashboard' %}" class="btn btn-secondary">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

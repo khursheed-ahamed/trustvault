@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }} — TrustVault{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <a href="{% url 'document_dashboard' %}" style="color: #64748b; text-decoration: none; font-size: 0.9rem;">
+    &larr; Back to Dashboard
+  </a>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem;">
+    <div>
+      <h2>{{ document.title }}</h2>
+      <p style="color: #64748b; font-size: 0.95rem;">
+        Server-side verified document. Public file URLs are disabled.
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="{% url 'secure_document_download' document.id %}" class="btn">
+        📥 Download Document
+      </a>
+      {% if is_owner %}
+        <a href="{% url 'manage_document_permissions' document.id %}" class="btn btn-secondary">
+          ⚙️ Manage Permissions
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Document Metadata</h3>
+  <ul class="meta-list">
+    <li>
+      <span class="meta-label">Title:</span>
+      <span><strong>{{ document.title }}</strong></span>
+    </li>
+    <li>
+      <span class="meta-label">Document Owner:</span>
+      <span>
+        {{ document.owner.username }}
+        {% if is_owner %}
+          <span class="badge badge-info" style="margin-left: 0.25rem;">You</span>
+        {% endif %}
+      </span>
+    </li>
+    <li>
+      <span class="meta-label">Original Filename:</span>
+      <span><code>{{ document.original_filename }}</code></span>
+    </li>
+    <li>
+      <span class="meta-label">Category:</span>
+      <span>
+        {% if document.category %}
+          <span class="badge badge-info">{{ document.category }}</span>
+        {% else %}
+          <span style="color: #94a3b8;">None</span>
+        {% endif %}
+      </span>
+    </li>
+    <li>
+      <span class="meta-label">Uploaded At:</span>
+      <span>{{ document.created_at|date:"F j, Y, H:i" }}</span>
+    </li>
+    <li>
+      <span class="meta-label">Last Modified:</span>
+      <span>{{ document.updated_at|date:"F j, Y, H:i" }}</span>
+    </li>
+  </ul>
+</div>
+{% endblock %}

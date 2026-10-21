@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — TrustVault{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+  <div>
+    <h2>Document Dashboard</h2>
+    <p style="color: #64748b; font-size: 0.95rem;">
+      Authorized documents accessible by your account.
+    </p>
+  </div>
+  {% if user.role == "OWNER" %}
+    <a href="{% url 'document_upload' %}" class="btn">
+      + Upload Document
+    </a>
+  {% endif %}
+</div>
+
+<div class="card">
+  {% if documents %}
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Owner</th>
+          <th>Category</th>
+          <th>Created Date</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in documents %}
+          <tr>
+            <td>
+              <strong>{{ doc.title }}</strong>
+            </td>
+            <td>
+              {{ doc.owner.username }}
+              {% if doc.owner == user %}
+                <span class="badge badge-info" style="margin-left: 0.25rem;">You</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if doc.category %}
+                <span class="badge badge-info">{{ doc.category }}</span>
+              {% else %}
+                <span style="color: #94a3b8;">None</span>
+              {% endif %}
+            </td>
+            <td>{{ doc.created_at|date:"Y-m-d H:i" }}</td>
+            <td style="text-align: right;">
+              <a href="{% url 'secure_document_detail' doc.id %}" class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">
+                View Details
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📁</div>
+      <h3>No documents available</h3>
+      <p style="margin-bottom: 1rem;">
+        You currently have no owned documents or documents shared with you.
+      </p>
+      {% if user.role == "OWNER" %}
+        <a href="{% url 'document_upload' %}" class="btn">
+          Upload your first document
+        </a>
+      {% else %}
+        <p style="font-size: 0.85rem; color: #94a3b8;">
+          Ask a document owner to grant your account access.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

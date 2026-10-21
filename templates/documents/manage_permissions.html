@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Permissions — {{ document.title }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <a href="{% url 'secure_document_detail' document.id %}" style="color: #64748b; text-decoration: none; font-size: 0.9rem;">
+    &larr; Back to "{{ document.title }}"
+  </a>
+</div>
+
+<div class="card">
+  <h2>Manage Access Permissions</h2>
+  <p style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.95rem;">
+    Grant or revoke explicit document access permissions for <strong>{{ document.title }}</strong>.
+  </p>
+
+  <form method="post" action="{% url 'manage_document_permissions' document.id %}" style="background: #f8fafc; padding: 1.25rem; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+    {% csrf_token %}
+    <h3 style="font-size: 1.05rem; margin-bottom: 1rem;">Grant User Permission</h3>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ form.user.id_for_label }}">Select User</label>
+        {{ form.user }}
+        {% if form.user.errors %}
+          <div class="errorlist">{{ form.user.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ form.permission.id_for_label }}">Permission Level</label>
+        {{ form.permission }}
+        {% if form.permission.errors %}
+          <div class="errorlist">{{ form.permission.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <button type="submit" class="btn">
+          Grant Permission
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Existing Permissions</h3>
+  {% if permissions %}
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Level</th>
+          <th>Status</th>
+          <th>Granted By</th>
+          <th>Granted Date</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for perm in permissions %}
+          <tr>
+            <td>
+              <strong>{{ perm.user.username }}</strong>
+              <div style="font-size: 0.8rem; color: #64748b;">{{ perm.user.get_role_display }}</div>
+            </td>
+            <td>
+              <span class="badge badge-info">{{ perm.get_permission_display }}</span>
+            </td>
+            <td>
+              {% if perm.is_active %}
+                <span class="badge badge-success">Active</span>
+              {% else %}
+                <span class="badge badge-danger">Revoked</span>
+                <div style="font-size: 0.75rem; color: #94a3b8;">
+                  {{ perm.revoked_at|date:"Y-m-d H:i" }}
+                </div>
+              {% endif %}
+            </td>
+            <td>{{ perm.granted_by.username }}</td>
+            <td>{{ perm.granted_at|date:"Y-m-d H:i" }}</td>
+            <td style="text-align: right;">
+              {% if perm.is_active %}
+                <form method="post" action="{% url 'revoke_document_permission' document.id perm.id %}" style="display: inline; margin: 0;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to revoke access for {{ perm.user.username }}?');">
+                    Revoke
+                  </button>
+                </form>
+              {% else %}
+                <span style="color: #94a3b8; font-size: 0.85rem;">Revoked</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p style="color: #64748b; font-size: 0.95rem; padding: 1rem 0;">
+      No explicit permissions have been granted for this document yet. Only you (the owner) have access.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

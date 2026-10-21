@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Login — TrustVault{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 480px; margin: 3rem auto;">
+  <h2>Sign In to TrustVault</h2>
+  <p style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.95rem;">
+    Access your encrypted and authorized documents securely.
+  </p>
+
+  {% if form.errors %}
+    <div class="alert alert-error">
+      <strong>Login failed:</strong> Please check your username and password. Note that fields are case-sensitive.
+    </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+
+    <div class="form-group">
+      <label for="id_username">Username</label>
+      <input type="text" name="username" id="id_username" autofocus required autocomplete="username">
+    </div>
+
+    <div class="form-group">
+      <label for="id_password">Password</label>
+      <input type="password" name="password" id="id_password" required autocomplete="current-password">
+    </div>
+
+    <button type="submit" class="btn" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem;">
+      Sign In
+    </button>
+  </form>
+
+  <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; font-size: 0.85rem; color: #64748b;">
+    <strong>Demo Accounts Notice:</strong><br>
+    Sample user accounts are generated via the management command:<br>
+    <code>python manage.py create_demo_users</code>
+    <ul style="margin-top: 0.5rem; margin-left: 1.25rem;">
+      <li><strong>Owner:</strong> <code>owner_demo</code> / <code>DemoPassword123!</code></li>
+      <li><strong>Viewer:</strong> <code>viewer_demo</code> / <code>DemoPassword123!</code></li>
+      <li><strong>Admin:</strong> <code>admin_demo</code> / <code>DemoPassword123!</code></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
