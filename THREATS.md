@@ -193,6 +193,42 @@ TrustVault must ensure that only explicitly authorised users can access a docume
 
 **Residual risk:** A user may retain a file they downloaded before access was revoked. The system cannot delete copies already stored on that user’s device.
 
+## Threat 20 — Production settings or secrets are misconfigured
+
+**Attack:** A deployment starts with debug output enabled, an insecure signing key, wildcard hosts, or a publicly exposed credential.
+
+**Impact:** Error pages may expose implementation details, sessions may be forged, host-header protections may fail, or an attacker may gain access to the database or storage.
+
+**Mitigation:** Production is explicitly selected with `DJANGO_ENV=production`; that mode requires `DEBUG=False`, `SECRET_KEY`, `ALLOWED_HOSTS`, a PostgreSQL `DATABASE_URL`, and private object-storage credentials. HTTPS redirects, secure cookies, HSTS, and proxy HTTPS handling are enabled only in production. Secrets are supplied by the host and excluded from Git.
+
+**Test:** Start settings in a production-configured subprocess and assert debug is disabled, PostgreSQL is selected, allowed hosts are explicit, and HTTPS/cookie protections are active.
+
+**Residual risk:** A wrongly configured provider dashboard, leaked deployment credential, or privileged operator can still undermine these controls. Rotate exposed credentials and restrict access to deployment settings.
+
+## Threat 21 — Public or directly accessible production object storage
+
+**Attack:** A bucket policy or object ACL permits unauthenticated reads, or an application response exposes a permanent object URL.
+
+**Impact:** Anyone who obtains or guesses an object key could bypass Django authorization and download confidential files.
+
+**Mitigation:** Production requires S3-compatible private storage. The backend omits public ACLs, does not use a custom public domain, and refuses to return storage URLs. The protected Django download view checks current authorization before opening the object. Configure the provider to block public policies and ACLs, use a least-privilege bucket-scoped credential, and require TLS.
+
+**Test:** Confirm local and cloud storage backends reject URL generation, no media route exists, and an unauthorized or revoked request is denied before the storage backend opens the object.
+
+**Residual risk:** Provider policy cannot be fully verified by local tests. An administrator must confirm the deployed bucket is private and test public access denial after deployment.
+
+## Threat 22 — Database migration or hosted service failure
+
+**Attack:** A release skips or races schema migrations, loses its database connection, or fails to start while exposing internal error details.
+
+**Impact:** The service may be unavailable or return errors during a release; a misconfigured database could expose user and audit data.
+
+**Mitigation:** The Render blueprint installs declared dependencies, collects static files, runs migrations in its pre-deploy step, and only then starts Gunicorn. Production requires a PostgreSQL URL. Keep backups and do not run migrations concurrently on every scaled web worker.
+
+**Test:** Verify the deployment migration command completes before application start and check the public health endpoint returns only a constant `ok` response.
+
+**Residual risk:** The health endpoint is a liveness check only; it does not test database or storage connectivity. Availability depends on the hosting and database providers.
+
 
 ---
 
@@ -328,3 +364,63 @@ TrustVault must ensure that only explicitly authorised users can access a docume
 **Mitigation:** Search includes only permissions where `revoked_at IS NULL`.
 
 **Test:** After revocation, the document disappears from the user’s search results and its detail/download requests return `403 Forbidden`.
+
+## Threat 20 — Production secrets are exposed
+
+**Attack:** A database password, Django secret key, or storage credential is committed to GitHub.
+
+**Impact:** Attackers could take over the application, database, or document storage.
+
+**Mitigation:** Read secrets from environment variables, commit only `.env.example`, and keep `.env` in `.gitignore.
+
+**Test:** Inspect the Git status and repository before pushing. Confirm no `.env` or real credentials are tracked.
+
+---
+
+## Threat 21 — Production runs with debug errors enabled
+
+**Attack:** An attacker triggers an application error while `DEBUG=True`.
+
+**Impact:** Django may reveal settings, file paths, stack traces, or secrets.
+
+**Mitigation:** Set `DEBUG=False` in production and configure `ALLOWED_HOSTS`.
+
+**Test:** Check the deployed settings and trigger a safe invalid request. The response must not expose a Django debug page.
+
+---
+
+## Threat 22 — Public cloud file storage
+
+**Attack:** A storage bucket or object is publicly readable.
+
+**Impact:** Anyone who guesses or obtains an object URL can download confidential documents without Django authorization.
+
+**Mitigation:** Configure private storage and serve files only through the protected Django download view.
+
+**Test:** Attempt direct object access without authentication and confirm it is denied.
+
+**Residual risk:** A cloud-provider bucket policy mistake could bypass application controls, so storage permissions must be reviewed during deployment.
+
+---
+
+## Threat 23 — Incorrect allowed hosts or CSRF configuration
+
+**Attack:** The deployed application accepts unexpected hostnames or rejects/weakens CSRF protection.
+
+**Impact:** Host-header attacks, broken authentication flows, or cross-site request forgery.
+
+**Mitigation:** Configure exact production hosts and trusted HTTPS origins through environment variables.
+
+**Test:** Verify the live hostname works, unexpected hosts are rejected, and POST forms still require CSRF tokens.
+
+---
+
+## Threat 24 — Deployment loses uploaded files
+
+**Attack:** Uploaded documents are stored only on an ephemeral deployment filesystem.
+
+**Impact:** A restart or redeploy deletes documents or makes them unavailable.
+
+**Mitigation:** Use a persistent private object-storage service for production uploads. Keep local filesystem storage only for development.
+
+**Test:** Upload a document, redeploy or restart the service, then verify the authorized owner can still download it.

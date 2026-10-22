@@ -189,3 +189,60 @@
 **How I tested it:** A fake text file named `fake.pdf` is rejected, while a real PDF beginning with `%PDF-` passes.
 
 **Commit:** Add the GitHub commit link here.
+
+---
+
+## 2026-10-22 — production deployment and final security
+
+**Prompt or summary:** Asked AI to inspect the existing TrustVault project and implement production settings, private S3-compatible storage, deployment files, route documentation, final security tests, and a live deployment checklist without replacing existing authorization behavior.
+
+**AI output:** Added environment-driven production configuration, PostgreSQL parsing, private local/S3 storage backends, Render/Gunicorn deployment configuration, a non-sensitive health route, route and deployment documentation, and regression tests for production settings, revocation, protected downloads, audit immutability, and health output.
+
+**Specific mistake or risk discovered:** The existing settings contained a hard-coded development signing-key placeholder, wildcard allowed hosts, and a `/media/` URL configuration. Local filesystem storage also has no provider policy to enforce privacy. The old placeholder remains in earlier Git history, so it must be treated as public and not reused. A deployment must not be described as live-tested before it is actually deployed.
+
+**Correction made:** Removed the key from current settings and removed the wildcard host default; production now requires an explicit secret, host allowlist, PostgreSQL URL, and S3-compatible credentials. Storage URL generation is disabled, and the existing download route retains its server-side permission check before opening file bytes. Added explicit production-settings and no-public-media tests, and documented private bucket policy requirements and the manual live checklist.
+
+**Verification status:** Automated checks and tests must be run locally before commit. The live checklist remains unverified until a deployment is performed.
+
+**Commit link:** `<add-after-commit>`
+
+
+## 2026-10-22 — Production configuration
+
+**Prompt:** Asked AI to prepare TrustVault for deployment with environment-based secrets, PostgreSQL, private storage, and secure production settings.
+
+**AI output:** Suggested production settings, `.env.example`, deployment files, Gunicorn, and private object storage.
+
+**What I checked:** Confirmed secrets are read from environment variables, `.env` is ignored, and local SQLite development still works when `DATABASE_URL` is absent.
+
+**What I did:** Added production configuration and documented the required deployment variables without committing real credentials.
+
+**Commit:** Add the GitHub commit link here.
+
+---
+
+## 2026-10-22 — Health endpoint and live verification
+
+**Prompt:** Asked AI how to verify that the deployed TrustVault application is running.
+
+**AI output:** Suggested a simple `/health/` endpoint returning HTTP 200 without exposing user or secret data.
+
+**What I did:** Added or verified the health endpoint and tested it locally with the browser and PowerShell.
+
+**What I checked:** Confirmed the endpoint returns `200`, while protected document routes still require authentication and authorization.
+
+**Commit:** Add the GitHub commit link here.
+
+---
+
+## 2026-10-22 — Final security testing
+
+**Prompt:** Asked AI for a final live-deployment security checklist.
+
+**AI output:** Suggested testing role boundaries, search privacy, revocation, secure downloads, audit events, and invalid uploads.
+
+**What I did:** Tested the live or local application with Admin, Owner, and Viewer accounts. Verified that unauthorized access returns `403`, revocation works immediately, and denied attempts create audit events.
+
+**What I checked:** Ran `python manage.py check` and `python manage.py test`.
+
+**Commit:** Add the GitHub commit link here.
