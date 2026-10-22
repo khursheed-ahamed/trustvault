@@ -143,3 +143,49 @@
 **What I checked:** Confirmed the upload form uses `enctype="multipart/form-data"` so the browser sends the selected file correctly.
 
 **Commit:** Add the GitHub commit link after committing this work.
+
+## 2026-10-22 — Admin audit dashboard
+
+**Prompt:** Asked AI to create an administrator-only audit activity dashboard for TrustVault.
+
+**AI output:** Suggested an `admin_audit_dashboard` view with filters for event type, outcome, actor, document, and date.
+
+**What I checked:** The project did not need a separate `audit/urls.py` because the dashboard route was connected directly in `trustvault/urls.py` at `/activity/`.
+
+**What I did:** Restricted the view using the custom user role `ADMIN`, added audit filters, and kept audit records read-only.
+
+**Security check:** Owners and viewers receive `403 Forbidden`. The view does not expose document file URLs.
+
+**Commit:** Add the GitHub commit link here.
+
+---
+
+## 2026-10-22 — Search authorization
+
+**Prompt:** Asked AI to add document search by title, owner, category, and upload date.
+
+**AI output:** Suggested a `DocumentSearchForm` and database filtering in the dashboard view.
+
+**Potential problem identified:** Filtering only in the template could reveal unauthorized document metadata.
+
+**What I did instead:** Applied the owner-or-active-permission authorization query before search filters and used `distinct()` to avoid duplicate results.
+
+**How I tested it:** Confirmed an unshared viewer cannot see another owner’s document in search, while a viewer with active permission can.
+
+**Commit:** Add the GitHub commit link here.
+
+---
+
+## 2026-10-22 — PDF signature validation
+
+**Prompt:** Asked AI to prevent text files renamed with a `.pdf` extension from being uploaded.
+
+**AI output:** Suggested checking that PDF uploads begin with the `%PDF-` signature.
+
+**What I did:** Added a five-byte signature check, restored the uploaded file pointer with `seek(0)`, and retained the 10 MB size limit and extension validation.
+
+**Limitation:** This is basic file validation, not antivirus scanning. DOCX validation remains limited to extension and size checks.
+
+**How I tested it:** A fake text file named `fake.pdf` is rejected, while a real PDF beginning with `%PDF-` passes.
+
+**Commit:** Add the GitHub commit link here.

@@ -265,3 +265,66 @@ TrustVault must ensure that only explicitly authorised users can access a docume
 **Test:** Grant permission to a viewer, verify document appears in search, revoke permission via owner POST, and verify document immediately disappears from viewer search results.
 
 **Residual risk:** None; database filtering evaluates live state on every request.
+
+
+## Threat 15 — Search metadata leakage
+
+**Attack:** A viewer searches for another user’s document and sees its title, owner, category, or date.
+
+**Impact:** Confidential metadata is exposed even if downloading is blocked.
+
+**Mitigation:** The server first limits the queryset to documents owned by the user or shared through an active permission. Search filters are applied only after this authorization scope.
+
+**Test:** A viewer without permission cannot find the owner’s document. A viewer with active permission can find it.
+
+**Residual risk:** Any future search or export endpoint must reuse the same authorization scope.
+
+---
+
+## Threat 16 — Unauthorized audit dashboard access
+
+**Attack:** An owner or viewer opens the audit activity URL directly.
+
+**Impact:** They may learn who accessed confidential documents and when.
+
+**Mitigation:** The dashboard checks the custom `ADMIN` role on the server and returns `403 Forbidden` for other users.
+
+**Test:** Admin receives `200`; owner and viewer receive `403`; logged-out users are redirected to login.
+
+---
+
+## Threat 17 — Audit records are modified or deleted
+
+**Attack:** A user attempts to edit or delete audit events through Django admin.
+
+**Impact:** Evidence of document access or denied attempts could be hidden.
+
+**Mitigation:** Audit events are read-only in Django admin. Add, change, and delete permissions return `False`.
+
+**Test:** Confirm the admin interface provides no edit or delete action for audit events.
+
+---
+
+## Threat 18 — Renamed non-PDF upload
+
+**Attack:** A text file or malicious file is renamed to end with `.pdf`.
+
+**Impact:** Users may download a malformed or unsafe file.
+
+**Mitigation:** PDF uploads must begin with the `%PDF-` file signature in addition to extension and size checks.
+
+**Test:** A text file named `fake.pdf` is rejected.
+
+**Residual risk:** Signature checking does not replace antivirus scanning or complete file-format validation.
+
+---
+
+## Threat 19 — Revoked document appears in search
+
+**Attack:** A user whose permission was revoked searches for the document.
+
+**Impact:** Revoked users may continue discovering confidential metadata.
+
+**Mitigation:** Search includes only permissions where `revoked_at IS NULL`.
+
+**Test:** After revocation, the document disappears from the user’s search results and its detail/download requests return `403 Forbidden`.
