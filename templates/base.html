@@ -60,6 +60,9 @@
         {% if user.role == "OWNER" %}
           <a href="{% url 'document_upload' %}">Upload Document</a>
         {% endif %}
+        {% if user.role == "ADMIN" %}
+          <a href="{% url 'admin_audit_dashboard' %}">Audit Dashboard</a>
+        {% endif %}
         {% if request.user.is_staff %}
           <a href="{% url 'admin:index' %}">Django Admin</a>
         {% endif %}

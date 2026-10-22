@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from audit.models import AuditEvent
-from .forms import DocumentPermissionForm, DocumentUploadForm
+from .forms import DocumentPermissionForm, DocumentSearchForm, DocumentUploadForm
 from .models import Document, DocumentPermission
 from .services import can_access_document, record_access_denied
 
@@ -17,17 +17,43 @@ from .services import can_access_document, record_access_denied
 def document_dashboard(request):
     """
     List only documents where the logged-in user is either the owner
-    or has an active (non-revoked) permission.
+    or has an active (non-revoked) permission, with secure scoped search.
     """
     documents = Document.objects.filter(
         Q(owner=request.user) |
         Q(permissions__user=request.user, permissions__revoked_at__isnull=True)
     ).distinct()
 
+    form = DocumentSearchForm(request.GET or None)
+    if form.is_valid():
+        q = form.cleaned_data.get("q")
+        owner = form.cleaned_data.get("owner")
+        category = form.cleaned_data.get("category")
+        uploaded_from = form.cleaned_data.get("uploaded_from")
+        uploaded_to = form.cleaned_data.get("uploaded_to")
+
+        if q:
+            documents = documents.filter(title__icontains=q)
+        if owner:
+            documents = documents.filter(owner__username__icontains=owner)
+        if category:
+            documents = documents.filter(category__icontains=category)
+        if uploaded_from:
+            documents = documents.filter(created_at__date__gte=uploaded_from)
+        if uploaded_to:
+            documents = documents.filter(created_at__date__lte=uploaded_to)
+    elif request.GET:
+        # If parameters were provided but validation failed (e.g. malformed date),
+        # display empty results and let the form display friendly validation errors.
+        documents = documents.none()
+
     return render(
         request,
         "documents/dashboard.html",
-        {"documents": documents},
+        {
+            "documents": documents,
+            "search_form": form,
+        },
     )
 
 

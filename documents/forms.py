@@ -36,6 +36,17 @@ class DocumentUploadForm(forms.ModelForm):
                 f"Invalid file extension '{ext}'. Only {allowed_list} files are allowed."
             )
 
+        # Stronger PDF signature check: verify magic bytes '%PDF-'
+        if ext == ".pdf":
+            header = uploaded_file.read(5)
+            # Restore file pointer immediately after reading signature
+            uploaded_file.seek(0)
+            if header != b"%PDF-":
+                raise forms.ValidationError(
+                    "Invalid PDF file: The file does not begin with the standard '%PDF-' signature. "
+                    "Renamed or invalid files are rejected."
+                )
+
         return uploaded_file
 
 
@@ -59,3 +70,38 @@ class DocumentPermissionForm(forms.ModelForm):
 
         self.fields["user"].queryset = qs.order_by("username")
         self.fields["user"].empty_label = "Choose a user..."
+
+
+class DocumentSearchForm(forms.Form):
+    """
+    Search and filter form for authorized documents on the dashboard.
+    """
+    q = forms.CharField(
+        required=False,
+        label="Title Keyword",
+        widget=forms.TextInput(attrs={"placeholder": "Search title...", "class": "form-control"}),
+    )
+    owner = forms.CharField(
+        required=False,
+        label="Owner Username",
+        widget=forms.TextInput(attrs={"placeholder": "Owner username...", "class": "form-control"}),
+    )
+    category = forms.CharField(
+        required=False,
+        label="Category",
+        widget=forms.TextInput(attrs={"placeholder": "Category...", "class": "form-control"}),
+    )
+    uploaded_from = forms.DateField(
+        required=False,
+        label="Uploaded From",
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(attrs={"type": "date", "placeholder": "YYYY-MM-DD", "class": "form-control"}),
+        error_messages={"invalid": "Enter a valid upload date in YYYY-MM-DD format."},
+    )
+    uploaded_to = forms.DateField(
+        required=False,
+        label="Uploaded To",
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(attrs={"type": "date", "placeholder": "YYYY-MM-DD", "class": "form-control"}),
+        error_messages={"invalid": "Enter a valid upload date in YYYY-MM-DD format."},
+    )

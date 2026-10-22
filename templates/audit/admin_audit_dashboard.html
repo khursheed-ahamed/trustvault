@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Activity Dashboard — TrustVault{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <h2>System Audit & Activity Dashboard</h2>
+  <p style="color: #64748b; font-size: 0.95rem;">
+    Immutable, server-recorded activity logs for authentication, document access, and permission changes.
+  </p>
+</div>
+
+<!-- Filter Controls -->
+<div class="card" style="margin-bottom: 2rem; background: #f8fafc; border: 1px solid #e2e8f0;">
+  <form method="get" action="{% url 'admin_audit_dashboard' %}">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ filter_form.event_type.id_for_label }}">Event Type</label>
+        {{ filter_form.event_type }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ filter_form.outcome.id_for_label }}">Outcome</label>
+        {{ filter_form.outcome }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ filter_form.actor.id_for_label }}">Actor Username</label>
+        {{ filter_form.actor }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ filter_form.document_id.id_for_label }}">Document ID</label>
+        {{ filter_form.document_id }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ filter_form.start_date.id_for_label }}">Start Date</label>
+        {{ filter_form.start_date }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ filter_form.end_date.id_for_label }}">End Date</label>
+        {{ filter_form.end_date }}
+      </div>
+    </div>
+
+    {% if filter_form.errors %}
+      <div class="alert alert-error" style="margin-top: 1rem; margin-bottom: 0;">
+        <strong>Invalid filter:</strong> Please check date and numeric formats.
+        {{ filter_form.errors }}
+      </div>
+    {% endif %}
+
+    <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+      <button type="submit" class="btn">Apply Filters</button>
+      <a href="{% url 'admin_audit_dashboard' %}" class="btn btn-secondary">Reset</a>
+    </div>
+  </form>
+</div>
+
+<!-- Activity Log Table -->
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h3 style="margin: 0; font-size: 1.1rem;">Logged Audit Events</h3>
+    <span style="font-size: 0.85rem; color: #64748b;">
+      Total: <strong>{{ events|length }}</strong> record(s) found
+    </span>
+  </div>
+
+  {% if events %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 170px;">Timestamp</th>
+          <th>Actor</th>
+          <th>Document</th>
+          <th>Event Type</th>
+          <th>Outcome</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+          <tr>
+            <td style="font-size: 0.85rem; white-space: nowrap; color: #475569;">
+              {{ event.created_at|date:"Y-m-d H:i:s" }}
+            </td>
+            <td>
+              {% if event.actor %}
+                <strong>{{ event.actor.username }}</strong>
+                <span style="font-size: 0.75rem; color: #64748b;">({{ event.actor.role }})</span>
+              {% else %}
+                <span style="color: #94a3b8; font-style: italic;">Anonymous / System</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if event.document %}
+                <span>{{ event.document.title }}</span>
+                <span style="font-size: 0.75rem; color: #64748b;">(ID: {{ event.document.id }})</span>
+              {% else %}
+                <span style="color: #94a3b8;">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-info">{{ event.get_event_type_display }}</span>
+            </td>
+            <td>
+              {% if event.outcome == "SUCCESS" %}
+                <span class="badge badge-success">SUCCESS</span>
+              {% elif event.outcome == "DENIED" %}
+                <span class="badge badge-danger">DENIED</span>
+              {% else %}
+                <span class="badge badge-danger">{{ event.outcome }}</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 0.85rem; max-width: 320px; word-break: break-word;">
+              {{ event.details }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
+      <h3>No audit events found</h3>
+      <p>No activity records match your current filter parameters.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

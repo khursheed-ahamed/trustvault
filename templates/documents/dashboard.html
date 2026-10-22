@@ -17,6 +17,51 @@
   {% endif %}
 </div>
 
+<!-- Search & Filter Controls -->
+<div class="card" style="margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0;">
+  <form method="get" action="{% url 'document_dashboard' %}">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ search_form.q.id_for_label }}">Title</label>
+        {{ search_form.q }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ search_form.owner.id_for_label }}">Owner</label>
+        {{ search_form.owner }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ search_form.category.id_for_label }}">Category</label>
+        {{ search_form.category }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ search_form.uploaded_from.id_for_label }}">Uploaded From</label>
+        {{ search_form.uploaded_from }}
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="{{ search_form.uploaded_to.id_for_label }}">Uploaded To</label>
+        {{ search_form.uploaded_to }}
+      </div>
+    </div>
+
+    {% if search_form.errors %}
+      <div class="alert alert-error" style="margin-top: 1rem; margin-bottom: 0;">
+        <strong>Search input error:</strong> Please check your search parameters.
+        {{ search_form.errors }}
+      </div>
+    {% endif %}
+
+    <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+      <button type="submit" class="btn">Search</button>
+      <a href="{% url 'document_dashboard' %}" class="btn btn-secondary">Clear</a>
+    </div>
+  </form>
+</div>
+
+<!-- Documents List -->
 <div class="card">
   {% if documents %}
     <table>
@@ -63,11 +108,11 @@
       <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📁</div>
       <h3>No documents available</h3>
       <p style="margin-bottom: 1rem;">
-        You currently have no owned documents or documents shared with you.
+        No documents match your query or are currently shared with your account.
       </p>
       {% if user.role == "OWNER" %}
         <a href="{% url 'document_upload' %}" class="btn">
-          Upload your first document
+          Upload a new document
         </a>
       {% else %}
         <p style="font-size: 0.85rem; color: #94a3b8;">

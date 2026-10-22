@@ -192,3 +192,76 @@ TrustVault must ensure that only explicitly authorised users can access a docume
 **Test:** Grant `READ` permission, confirm download succeeds, revoke through the owner-only POST route, then verify the viewer’s next detail and download requests return `403 Forbidden`.
 
 **Residual risk:** A user may retain a file they downloaded before access was revoked. The system cannot delete copies already stored on that user’s device.
+
+
+---
+
+## Threat 15 — Search metadata leakage
+
+**Attack:** A user without access to a document searches for keywords, titles, or owner names and learns that confidential documents exist or infers their metadata.
+
+**Impact:** Unauthorized users can deduce confidential corporate initiatives, M&A targets, employee names, or financial categories through search results or error messages.
+
+**Mitigation:** The search query is constrained at the database level to only documents the requesting user owns or has an active `DocumentPermission` for. Unmatched or unauthorized records are never loaded or revealed in template context.
+
+**Test:** A viewer searches for an owner's private document title or owner username on the dashboard; confirm the document does not appear in search results.
+
+**Residual risk:** None within the application database scope; users can only discover documents they already have authorized access to view.
+
+---
+
+## Threat 16 — Unauthorized audit dashboard access
+
+**Attack:** A document owner, viewer, or unauthenticated user navigates to `/activity/` to inspect system-wide activity, document titles, usernames, and download patterns.
+
+**Impact:** Information disclosure of sensitive system events, access logs, and user activity.
+
+**Mitigation:** The `admin_audit_dashboard` view enforces a strict server-side role check (`request.user.role == "ADMIN"`). It explicitly rejects owners, viewers, and unauthenticated users with `403 Forbidden` or redirection to login. Neither `is_staff` nor `is_superuser` alone can bypass this check.
+
+**Test:** Verify owner and viewer users receive HTTP `403 Forbidden` when requesting `/activity/`. Verify unauthenticated requests redirect to `/login/`.
+
+**Residual risk:** Administrators can see document titles and actor usernames within audit events.
+
+---
+
+## Threat 17 — Audit record modification or deletion
+
+**Attack:** An attacker or malicious insider attempts to modify, falsify, or delete log records to conceal unauthorized activity or cover tracks.
+
+**Impact:** Destruction of audit trail integrity, non-repudiation failure, and inability to investigate security incidents.
+
+**Mitigation:** The `AuditEvent` model has no user-facing edit or delete views. In Django Admin, `has_add_permission`, `has_change_permission`, and `has_delete_permission` are overridden to return `False`, making the log strictly read-only.
+
+**Test:** Automated tests verify `has_add_permission`, `has_change_permission`, and `has_delete_permission` return `False` on the model admin.
+
+**Residual risk:** Direct SQL access to the underlying SQLite database file would allow modification; in production, append-only centralized logging or write-once storage (WORM) should be used.
+
+---
+
+## Threat 18 — Fake files renamed with a `.pdf` extension
+
+**Attack:** An attacker renames a script, executable, HTML, or corrupted file to end in `.pdf` and uploads it to bypass extension-only checks.
+
+**Impact:** The platform stores deceptive files that could exploit recipient PDF reader vulnerabilities, break processing pipelines, or execute unintended content.
+
+**Mitigation:** `DocumentUploadForm.clean_file()` inspects the magic bytes of `.pdf` uploads, requiring the first 5 bytes to match the standard `%PDF-` signature (`b"%PDF-"`). Renamed non-PDF files are rejected with a clear validation error. The file pointer is immediately reset via `uploaded_file.seek(0)`.
+
+**Test:** Upload a text file named `fake.pdf` and verify form validation fails. Upload a file starting with `%PDF-` and verify it succeeds.
+
+**Residual risk & limitations:**
+1. **Not Antivirus Scanning:** Magic byte validation checks only header signature consistency; it is NOT antivirus or malware scanning and does not inspect embedded JavaScript or exploit payloads within valid PDF structures.
+2. **Limited `.docx` and `.txt` Validation:** `.docx` files are ZIP archives and `.txt` are raw characters; full deep-inspection MIME validation for those formats remains a current limitation.
+
+---
+
+## Threat 19 — Revoked permissions appearing in search results
+
+**Attack:** A user whose permission was recently revoked uses dashboard search filters to see if the document still appears in cached or un-scoped queries.
+
+**Impact:** Former recipients could continue discovering document presence and metadata after access revocation.
+
+**Mitigation:** The dashboard search queryset explicitly filters `permissions__revoked_at__isnull=True`. Revoked permissions are immediately excluded at the database level on every request.
+
+**Test:** Grant permission to a viewer, verify document appears in search, revoke permission via owner POST, and verify document immediately disappears from viewer search results.
+
+**Residual risk:** None; database filtering evaluates live state on every request.

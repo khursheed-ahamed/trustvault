@@ -13,7 +13,13 @@ class AuditEventAdmin(admin.ModelAdmin):
         "short_details",
     )
     list_filter = ("event_type", "outcome", "created_at")
-    search_fields = ("details", "actor__username", "document__title")
+    search_fields = (
+        "actor__username",
+        "document__title",
+        "event_type",
+        "outcome",
+        "details",
+    )
     readonly_fields = (
         "created_at",
         "actor",
