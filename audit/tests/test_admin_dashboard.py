@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.admin.sites import site
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -120,7 +119,7 @@ class AdminAuditDashboardTests(TestCase):
         content = response.content.decode()
 
         self.assertNotIn(self.document.file.name, content)
-        self.assertNotIn(settings.MEDIA_URL, content)
+        self.assertNotIn("/media/", content)
 
     # 7. Audit events cannot be changed or deleted through Django admin.
     def test_audit_admin_is_strictly_read_only(self):

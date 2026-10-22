@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
@@ -245,16 +244,16 @@ class DocumentSecurityAndPermissionTests(TestCase):
         dashboard_res = self.client.get(reverse("document_dashboard"))
         self.assertEqual(dashboard_res.status_code, 200)
         self.assertNotIn(self.document.file.name, dashboard_res.content.decode())
-        self.assertNotIn(settings.MEDIA_URL, dashboard_res.content.decode())
+        self.assertNotIn("/media/", dashboard_res.content.decode())
 
         # Check Detail page
         detail_res = self.client.get(self.detail_url)
         self.assertEqual(detail_res.status_code, 200)
         self.assertNotIn(self.document.file.name, detail_res.content.decode())
-        self.assertNotIn(settings.MEDIA_URL, detail_res.content.decode())
+        self.assertNotIn("/media/", detail_res.content.decode())
 
         # Check Manage Permissions page
         perms_res = self.client.get(self.manage_perms_url)
         self.assertEqual(perms_res.status_code, 200)
         self.assertNotIn(self.document.file.name, perms_res.content.decode())
-        self.assertNotIn(settings.MEDIA_URL, perms_res.content.decode())
+        self.assertNotIn("/media/", perms_res.content.decode())

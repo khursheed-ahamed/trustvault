@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tz %}
 
 {% block title %}Audit Activity Dashboard — TrustVault{% endblock %}
 
@@ -84,7 +85,7 @@
         {% for event in events %}
           <tr>
             <td style="font-size: 0.85rem; white-space: nowrap; color: #475569;">
-              {{ event.created_at|date:"Y-m-d H:i:s" }}
+              {{ event.created_at|localtime|date:"Y-m-d H:i:s" }}
             </td>
             <td>
               {% if event.actor %}

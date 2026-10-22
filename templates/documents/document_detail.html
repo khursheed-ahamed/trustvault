@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tz %}
 
 {% block title %}{{ document.title }} — TrustVault{% endblock %}
 
@@ -60,11 +61,11 @@
     </li>
     <li>
       <span class="meta-label">Uploaded At:</span>
-      <span>{{ document.created_at|date:"F j, Y, H:i" }}</span>
+      <span>{{ document.created_at|localtime|date:"F j, Y, H:i" }}</span>
     </li>
     <li>
       <span class="meta-label">Last Modified:</span>
-      <span>{{ document.updated_at|date:"F j, Y, H:i" }}</span>
+      <span>{{ document.updated_at|localtime|date:"F j, Y, H:i" }}</span>
     </li>
   </ul>
 </div>

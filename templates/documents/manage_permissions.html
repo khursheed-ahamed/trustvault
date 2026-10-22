@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tz %}
 
 {% block title %}Manage Permissions — {{ document.title }}{% endblock %}
 
@@ -77,12 +78,12 @@
               {% else %}
                 <span class="badge badge-danger">Revoked</span>
                 <div style="font-size: 0.75rem; color: #94a3b8;">
-                  {{ perm.revoked_at|date:"Y-m-d H:i" }}
+                  {{ perm.revoked_at|localtime|date:"Y-m-d H:i" }}
                 </div>
               {% endif %}
             </td>
             <td>{{ perm.granted_by.username }}</td>
-            <td>{{ perm.granted_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ perm.granted_at|localtime|date:"Y-m-d H:i" }}</td>
             <td style="text-align: right;">
               {% if perm.is_active %}
                 <form method="post" action="{% url 'revoke_document_permission' document.id perm.id %}" style="display: inline; margin: 0;">

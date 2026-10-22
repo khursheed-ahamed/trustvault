@@ -2,6 +2,21 @@ from django.conf import settings
 from django.db import models
 
 
+class ImmutableAuditEventQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise TypeError("Audit events cannot be updated.")
+
+    def delete(self):
+        raise TypeError("Audit events cannot be deleted.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise TypeError("Audit events cannot be updated.")
+
+
+class AuditEventManager(models.Manager.from_queryset(ImmutableAuditEventQuerySet)):
+    pass
+
+
 class AuditEvent(models.Model):
     """
     Immutable audit log model recording all critical security and document events.
@@ -41,14 +56,14 @@ class AuditEvent(models.Model):
 
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="audit_events",
     )
     document = models.ForeignKey(
         "documents.Document",
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="audit_events",
@@ -67,7 +82,17 @@ class AuditEvent(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
+    objects = AuditEventManager()
+
     def __str__(self):
         actor_name = self.actor.username if self.actor else "Anonymous/System"
         doc_title = self.document.title if self.document else "No Document"
         return f"[{self.created_at:%Y-%m-%d %H:%M:%S}] {self.event_type} - {self.outcome} (Actor: {actor_name}, Doc: {doc_title})"
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise TypeError("Audit events cannot be updated.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise TypeError("Audit events cannot be deleted.")

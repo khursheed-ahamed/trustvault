@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tz %}
 
 {% block title %}Dashboard — TrustVault{% endblock %}
 
@@ -93,7 +94,7 @@
                 <span style="color: #94a3b8;">None</span>
               {% endif %}
             </td>
-            <td>{{ doc.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ doc.created_at|localtime|date:"Y-m-d H:i" }}</td>
             <td style="text-align: right;">
               <a href="{% url 'secure_document_detail' doc.id %}" class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">
                 View Details

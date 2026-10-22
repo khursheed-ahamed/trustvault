@@ -1,138 +1,168 @@
 # TrustVault
 
-TrustVault is a secure document-sharing platform built for the SnovaSys Fresher Hiring Challenge 2026.
-
-The system is designed so that only authorised users can access a document, and important document activity can be traced through an audit trail.
+TrustVault is a Django document-sharing challenge project. Authorization for protected documents is checked on the server for every request; a hidden link or a known storage key does not grant access.
 
 ## Features
 
-- User authentication: login and logout
-- Three user roles:
-  - Administrator
-  - Document Owner
-  - Viewer
-- Secure document upload and management
-- Per-document permissions for named users
-- Read and edit permissions
-- Owners can grant and revoke access
-- Search documents by name, owner, category, and date
-- Audit log for uploads, downloads, updates, deletions, permission changes, and denied access attempts
-- Admin dashboard for document activity and permission changes
-- Automated tests proving one user cannot access another user's private document
+- Custom `ADMIN`, `OWNER`, and `VIEWER` roles
+- Owner-only document uploads and permission management
+- Explicit `READ` and `EDIT` document permissions, including immediate revocation
+- Search restricted to documents owned by or actively shared with the signed-in user
+- Protected document details and downloads
+- Administrator-only audit dashboard and append-only audit records
+- Local SQLite/filesystem development and PostgreSQL/private S3-compatible production configuration
 
-## Security Model
+See [docs/API.md](docs/API.md) for the routes and their access rules and [THREATS.md](THREATS.md) for the threat model.
 
-TrustVault enforces access rules on the server for every document request.
+## Local setup (Windows PowerShell)
 
-A user can access a document only when:
-
-1. They are the document owner, or
-2. They have an active explicit permission grant for that document.
-
-Users without permission cannot view, download, edit, delete, or discover documents through search.
-
-When an owner revokes access, the user loses access immediately on their next request.
-
-Uploaded files are not public. Every download goes through a Django view that checks permission before sending the file.
-
-## Technology Stack
-
-- Python
-- Django
-- SQLite for local development
-- PostgreSQL for production deployment
-- Django ORM
-- Django built-in authentication
-- HTML, CSS, Bootstrap
-- Pytest and pytest-django for testing
-- Git and GitHub for version control
-
-## Project Structure
-
-```text
-trustvault/
-├── accounts/          # User accounts, authentication, and roles
-├── documents/         # Documents, uploads, permissions, and downloads
-├── audit/             # Audit logs and administrator activity view
-├── templates/         # HTML templates
-├── tests/             # Automated tests
-├── trustvault/        # Django settings and URLs
-├── README.md
-├── THREATS.md
-├── PROMPTS.md
-├── requirements.txt
-└── manage.py
-```
-
-## Local Setup
-
-1. Clone the repository.
-
-```bash
-git clone https://github.com/YOUR-USERNAME/trustvault.git
-cd trustvault
-```
-
-2. Create and activate a virtual environment.
+From the repository root:
 
 ```powershell
 python -m venv venv
-venv\Scripts\activate
-```
-
-3. Install dependencies.
-
-```bash
-pip install -r requirements.txt
-```
-
-4. Run database migrations.
-
-```bash
+.\venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+$env:DJANGO_ENV = "development"
+$env:DEBUG = "True"
+$env:SECRET_KEY = (python -c "import secrets; print(secrets.token_urlsafe(50))")
+python manage.py check
 python manage.py migrate
-```
-
-5. Create sample users or a superuser.
-
-```bash
-python manage.py createsuperuser
-```
-
-6. Start the development server.
-
-```bash
 python manage.py runserver
 ```
 
-Open `http://127.0.0.1:8000/` in the browser.
+Open `http://127.0.0.1:8000/`. When `DATABASE_URL` and cloud-storage settings are absent, Django uses local SQLite and a local filesystem directory. Local uploaded files are not mapped to a public media URL; use the protected download route. The generated development key exists only in the current PowerShell session. A new value on a later run invalidates existing sessions.
 
-## Testing
+`.env.example` documents the variable names but is not automatically loaded by Django. Set environment variables in your shell or configure them in the hosting provider. Never commit `.env`.
 
-Run automated tests with:
+## Environment variables
+
+| Name | Required | Purpose |
+|---|---|---|
+| `DJANGO_ENV` | Production | Set to `production` to enable production requirements and HTTPS security settings; use `development` locally. |
+| `PYTHON_VERSION` | Render | Set to `3.13.1` in the Render blueprint; use a Python release supported by Django on another host. |
+| `TIME_ZONE` | No | Time zone used to display stored timestamps. Defaults to `Asia/Kolkata` (`2026-10-22 12:30 UTC` displays as `18:00`). |
+| `DEBUG` | Production | Must be `False` in production. Defaults to `False` for production and `True` for development. |
+| `SECRET_KEY` | Production | Django signing secret. Generated by Render in the supplied blueprint; never commit it. |
+| `ALLOWED_HOSTS` | Production | Comma-separated hostnames only, without scheme or paths, e.g. `trustvault.example.com`. |
+| `CSRF_TRUSTED_ORIGINS` | Production | Comma-separated origins including scheme, e.g. `https://trustvault.example.com`. |
+| `DATABASE_URL` | Production | PostgreSQL URL supplied by the host. When set, it must resolve to PostgreSQL. If absent in development, SQLite is used. |
+| `AWS_ACCESS_KEY_ID` | Production | Least-privilege key for the private storage bucket. |
+| `AWS_SECRET_ACCESS_KEY` | Production | Secret for the storage key; enter through the provider's secret manager. |
+| `AWS_STORAGE_BUCKET_NAME` | Production | Name of the private bucket/container. |
+| `AWS_S3_ENDPOINT_URL` | Provider-specific | Optional S3-compatible endpoint; set for Cloudflare R2 or compatible services. Leave blank for AWS S3. |
+| `AWS_S3_REGION_NAME` | Recommended | Bucket region (for R2, typically `auto`; AWS uses the bucket's region). |
+| `AWS_S3_SIGNATURE_VERSION` | Recommended | S3 signing version; use `s3v4`. |
+
+If any of the three required bucket/credential variables is supplied, all three must be supplied. Production mode refuses to start without PostgreSQL and private object-storage configuration. Development falls back to private local filesystem storage.
+
+## Private object-storage setup
+
+Create a private bucket in AWS S3, Cloudflare R2, or an S3-compatible service. Turn on the provider's equivalent of **Block Public Access** for public policies and ACLs. Do not grant `public-read`, `authenticated-read`, or access to `Principal: "*"`. Give the application key only the bucket/object operations it needs (including read and write, and delete only if operationally needed); do not use an account-wide key. Require TLS for bucket requests and enable server-side encryption where supported.
+
+Set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, and `AWS_S3_SIGNATURE_VERSION` in the host's secret/environment settings. For R2 or another compatible service, also set `AWS_S3_ENDPOINT_URL` to the provider's HTTPS endpoint. Do not put credentials in this repository.
+
+The Django storage backend does not generate object URLs. Documents are streamed only from the existing protected download view after it rechecks the current permission in the database. A storage key by itself must not be publicly readable. Do not add a public media route or use `document.file.url`.
+
+## Production deployment (Render)
+
+The repository includes [render.yaml](render.yaml). Create the service from the blueprint and configure:
+
+1. A Render PostgreSQL database and the attached `DATABASE_URL`.
+2. `DJANGO_ENV=production`, `DEBUG=False`, and the correct `ALLOWED_HOSTS` value (hostname only).
+3. `CSRF_TRUSTED_ORIGINS` with the deployed HTTPS origin, such as `https://<service-name>.onrender.com`.
+4. All three required storage credentials/bucket values, plus region, signature version, and the S3 endpoint when required by the provider.
+5. A strong, unique `SECRET_KEY`. The blueprint generates one; keep it in the host's secret store.
+
+Blueprint commands:
+
+- Build: `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+- Pre-deploy migration: `python manage.py migrate --noinput`
+- Start: `gunicorn trustvault.wsgi:application`
+- Health check: `GET /health/`
+
+The blueprint pins Python 3.13.1 so the service uses a runtime supported by the project's Django LTS line.
+
+The migration runs once before the service starts. For another host (including Railway), configure the same three commands as its build, one-off pre-deploy, and start commands respectively, attach PostgreSQL, and enter the same environment variables in its dashboard. Do not run migrations concurrently on every web worker when scaling.
+
+Run the migration manually before starting a single instance, if needed:
 
 ```bash
-pytest
+python manage.py migrate --noinput
+gunicorn trustvault.wsgi:application
 ```
 
-Security tests include checks that an unauthorised user cannot access or download another user’s document.
+### Demo accounts
 
-## API Access Rules
+Create the administrator interactively so its password is not placed in shell history:
 
-| Action | Allowed users |
-|---|---|
-| Upload document | Authenticated document owner |
-| View/download document | Owner or explicitly granted user |
-| Edit document | Owner or user with edit permission |
-| Delete document | Owner only |
-| Grant/revoke permission | Owner only |
-| View audit dashboard | Administrator only |
+```powershell
+python manage.py createsuperuser --username admin_demo --email admin_demo@example.invalid
+```
 
-## Documentation
+Set the custom application role for that account:
 
-- `THREATS.md` explains security risks, mitigations, and related tests.
-- `PROMPTS.md` records how AI was used during development, including mistakes found and corrections made.
-- The repository commit history shows development progress across the challenge week.
+```powershell
+python manage.py shell -c "from accounts.models import User; user = User.objects.get(username='admin_demo'); user.role = User.ADMIN; user.save(update_fields=['role'])"
+```
 
-## Known Limitations
+Create `owner_demo` and `viewer_demo` through the signup page, then assign `OWNER` and `VIEWER` roles through Django admin or an administrator-only provisioning process. Use unique, private passwords and never add them to Git. For a submitted live demo, fill in placeholders only after deployment:
 
-This is a challenge project. Any unfinished features, accepted risks, and future improvements will be documented clearly before submission.
+```text
+LIVE_URL=<add-after-deployment>
+ADMIN_USERNAME=<add-after-deployment>
+ADMIN_PASSWORD=<store-outside-the-repository>
+OWNER_USERNAME=<add-after-deployment>
+VIEWER_USERNAME=<add-after-deployment>
+```
+
+## Database commands
+
+```powershell
+python manage.py makemigrations
+python manage.py migrate
+python manage.py showmigrations
+```
+
+The current Day-6 changes do not alter database fields, so they do not require a new model migration. Always review generated migrations before deployment.
+
+## Tests and checks
+
+From the activated virtual environment:
+
+```powershell
+python manage.py check
+python manage.py test
+```
+
+The suite includes role and object authorization, search scoping, permission revocation, upload signature checks, access-denial audits, audit immutability, private storage routing, production settings, and the health endpoint.
+
+## Live deployment verification
+
+Do not mark deployment checks complete until they have been performed against the actual live URL:
+
+1. Log in as `admin_demo` and open `/activity/`.
+2. Confirm `owner_demo` and `viewer_demo` both receive `403` from `/activity/`.
+3. Log in as `owner_demo` and upload a genuine PDF.
+4. Download it through `/documents/<id>/download/`; do not test using a storage URL.
+5. Grant `READ` access to `viewer_demo`.
+6. Log in as `viewer_demo` and confirm the document detail and protected download work.
+7. Revoke that permission as the owner.
+8. Confirm the viewer's next detail and download requests receive `403`.
+9. Search as the viewer and confirm the revoked document is absent.
+10. Check `/activity/` and confirm upload, download, grant, revoke, and denied attempts are recorded.
+11. Confirm `GET /health/` returns only HTTP 200 with the body `ok`.
+12. Confirm the bucket denies unauthenticated/public reads and that the deployed app uses HTTPS.
+
+## Known limitations
+
+- A `%PDF-` header check does not parse the full PDF or scan for malware. DOCX validation is limited; antivirus/content scanning is not implemented.
+- Revocation cannot delete copies a recipient downloaded before access was revoked.
+- Application-level audit immutability does not prevent a database owner or privileged operator from changing data directly. Use external append-only/WORM logging for stronger tamper resistance.
+- An earlier commit contains a development-only Django signing-key placeholder. It has been removed from current settings, but existing Git history was not rewritten; treat that historical value as public and never reuse it. Rotate any deployment key that might have been based on it.
+- Local files remain on the development machine and are not backed up. Production requires a correctly configured private bucket and PostgreSQL.
+- The live deployment checklist is not evidence of a completed live deployment; record actual results separately.
+- Email verification, password reset, rate limiting, malware scanning, and multi-factor authentication are not implemented.
+
+## Reporting security issues
+
+Do not publish exploit details, credentials, or personal data in a public issue. Report suspected vulnerabilities privately to the repository maintainers, include a concise impact and reproduction summary, and allow time for a fix before public disclosure. Rotate any secret that may have been exposed.
