@@ -61,7 +61,7 @@ These are public development credentials, not suitable for a live deployment. Th
 
 Live demo: https://trustvault-uzww.onrender.com/
 
-The free Render instance may take up to one minute to wake after inactivity.
+NOTE: "The free Render instance may take up to one minute to wake after inactivity".
 
 ## Environment variables
 
