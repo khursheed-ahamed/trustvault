@@ -15,7 +15,11 @@
     </a>
     <nav>
       {% if user.is_authenticated %}
-        <span class="user-info">Signed in as <strong>{{ user.username }}</strong> ({{ user.role }})</span>
+        {% if user.role == "OWNER" %}
+          <span class="user-info">Signed in as <strong>{{ user.username }}</strong></span>
+        {% else %}
+          <span class="user-info">Signed in as <strong>{{ user.username }}</strong> ({{ user.role }})</span>
+        {% endif %}
         <a href="{% url 'document_dashboard' %}">Dashboard</a>
         {% if user.role == "OWNER" %}
           <a href="{% url 'document_upload' %}">Upload Document</a>
