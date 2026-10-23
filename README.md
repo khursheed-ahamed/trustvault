@@ -59,7 +59,9 @@ These are public development credentials, not suitable for a live deployment. Th
 
 ## Live URL
 
-No live deployment URL is configured or verified in this repository. After deployment, record the actual HTTPS URL here; do not treat the local development URL as a live deployment.
+Live demo: https://trustvault-uzww.onrender.com/
+
+The free Render instance may take up to one minute to wake after inactivity.
 
 ## Environment variables
 
