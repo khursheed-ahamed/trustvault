@@ -2,9 +2,19 @@
 
 TrustVault is a Django document-sharing challenge project. Authorization for protected documents is checked on the server for every request; a hidden link or a known storage key does not grant access.
 
+## Technology stack
+
+- Python 3.13.1 in the Render blueprint
+- Django 5.2
+- SQLite and local filesystem storage for development
+- PostgreSQL and private S3-compatible object storage for production
+- WhiteNoise for static files and Gunicorn as the production WSGI server
+- Render blueprint for deployment
+
 ## Features
 
 - Custom `ADMIN`, `OWNER`, and `VIEWER` roles
+- Owner accounts see their username without a redundant owner/self label
 - Owner-only document uploads and permission management
 - Explicit `READ` and `EDIT` document permissions, including immediate revocation
 - Search restricted to documents owned by or actively shared with the signed-in user
@@ -27,12 +37,29 @@ $env:DEBUG = "True"
 $env:SECRET_KEY = (python -c "import secrets; print(secrets.token_urlsafe(50))")
 python manage.py check
 python manage.py migrate
+python manage.py create_demo_users
 python manage.py runserver
 ```
 
 Open `http://127.0.0.1:8000/`. When `DATABASE_URL` and cloud-storage settings are absent, Django uses local SQLite and a local filesystem directory. Local uploaded files are not mapped to a public media URL; use the protected download route. The generated development key exists only in the current PowerShell session. A new value on a later run invalidates existing sessions.
 
 `.env.example` documents the variable names but is not automatically loaded by Django. Set environment variables in your shell or configure them in the hosting provider. Never commit `.env`.
+
+## Demo credentials
+
+The local-only `python manage.py create_demo_users` command creates or resets these accounts:
+
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin_demo` | `DemoPassword123!` |
+| Owner | `owner_demo` | `DemoPassword123!` |
+| Viewer | `viewer_demo` | `DemoPassword123!` |
+
+These are public development credentials, not suitable for a live deployment. The command resets their passwords to this value whenever it runs. Do not run it in production; use unique, strong credentials provisioned through a secure process instead.
+
+## Live URL
+
+No live deployment URL is configured or verified in this repository. After deployment, record the actual HTTPS URL here; do not treat the local development URL as a live deployment.
 
 ## Environment variables
 
@@ -118,12 +145,23 @@ VIEWER_USERNAME=<add-after-deployment>
 ## Database commands
 
 ```powershell
-python manage.py makemigrations
 python manage.py migrate
 python manage.py showmigrations
 ```
 
-The current Day-6 changes do not alter database fields, so they do not require a new model migration. Always review generated migrations before deployment.
+To create a migration after changing models, run `python manage.py makemigrations` and review the generated migration before applying it. To create or reset local demo users, run `python manage.py create_demo_users` after migrating. Never run that demo command in production.
+
+## Permission model
+
+- `ADMIN`, `OWNER`, and `VIEWER` are application roles. Only an `OWNER` role may upload documents.
+- The document owner can access their document and manage its explicit permission grants.
+- An owner can grant `READ` or `EDIT` access to a named user. `READ` permits viewing and downloading. The authorization policy also permits edit actions for `EDIT` grants, but the application does not currently expose a document-editing endpoint.
+- Grants are checked against the current database state on each request. Revoking a grant immediately removes access.
+- A grant does not let a recipient manage permissions or grant access to others. An `ADMIN` role or Django staff/superuser status alone does not grant access to another user's documents.
+
+## Security model
+
+Authorization is enforced server-side for each protected document request; document IDs, hidden links, and storage keys are not credentials. Files are stored privately and streamed only after permission checks, with no public media route or exposed permanent file URL. Mutating forms require CSRF protection. Important activity, including denied access, is recorded in append-only audit events; audit records are read-only in Django admin. Production settings require PostgreSQL, a secret key, allowed hosts, and private object storage, and enable HTTPS-related protections.
 
 ## Tests and checks
 
