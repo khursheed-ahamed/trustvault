@@ -4,43 +4,46 @@
 {% block title %}Audit Activity Dashboard — TrustVault{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1.5rem;">
-  <h2>System Audit & Activity Dashboard</h2>
-  <p style="color: #64748b; font-size: 0.95rem;">
+<div class="dashboard-heading audit-heading">
+  <div>
+  <p class="eyebrow">Security oversight</p>
+  <h1>System Audit & Activity Dashboard</h1>
+  <p class="page-lead">
     Immutable, server-recorded activity logs for authentication, document access, and permission changes.
   </p>
+  </div>
 </div>
 
 <!-- Filter Controls -->
-<div class="card" style="margin-bottom: 2rem; background: #f8fafc; border: 1px solid #e2e8f0;">
+<div class="card search-card">
   <form method="get" action="{% url 'admin_audit_dashboard' %}">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: flex-end;">
-      <div class="form-group" style="margin-bottom: 0;">
+    <div class="audit-filter-grid">
+      <div class="form-group">
         <label for="{{ filter_form.event_type.id_for_label }}">Event Type</label>
         {{ filter_form.event_type }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ filter_form.outcome.id_for_label }}">Outcome</label>
         {{ filter_form.outcome }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ filter_form.actor.id_for_label }}">Actor Username</label>
         {{ filter_form.actor }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ filter_form.document_id.id_for_label }}">Document ID</label>
         {{ filter_form.document_id }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ filter_form.start_date.id_for_label }}">Start Date</label>
         {{ filter_form.start_date }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ filter_form.end_date.id_for_label }}">End Date</label>
         {{ filter_form.end_date }}
       </div>
@@ -53,7 +56,7 @@
       </div>
     {% endif %}
 
-    <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+    <div class="form-actions">
       <button type="submit" class="btn">Apply Filters</button>
       <a href="{% url 'admin_audit_dashboard' %}" class="btn btn-secondary">Reset</a>
     </div>
@@ -62,14 +65,15 @@
 
 <!-- Activity Log Table -->
 <div class="card">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-    <h3 style="margin: 0; font-size: 1.1rem;">Logged Audit Events</h3>
-    <span style="font-size: 0.85rem; color: #64748b;">
+  <div class="section-heading">
+    <h2>Logged audit events</h2>
+    <span class="result-count">
       Total: <strong>{{ events|length }}</strong> record(s) found
     </span>
   </div>
 
   {% if events %}
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -122,9 +126,10 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% else %}
     <div class="empty-state">
-      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
+      <div class="empty-state-icon" aria-hidden="true">◇</div>
       <h3>No audit events found</h3>
       <p>No activity records match your current filter parameters.</p>
     </div>

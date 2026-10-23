@@ -4,28 +4,29 @@
 {% block title %}Manage Permissions — {{ document.title }}{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1.5rem;">
-  <a href="{% url 'secure_document_detail' document.id %}" style="color: #64748b; text-decoration: none; font-size: 0.9rem;">
+<div class="back-link">
+  <a href="{% url 'secure_document_detail' document.id %}">
     &larr; Back to "{{ document.title }}"
   </a>
 </div>
 
 <div class="card">
-  <h2>Manage Access Permissions</h2>
-  <p style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.95rem;">
+  <p class="eyebrow detail-eyebrow">Access control</p>
+  <h1>Manage permissions</h1>
+  <p class="detail-lead">
     Grant or revoke explicit document access permissions for <strong>{{ document.title }}</strong>.
   </p>
 
-  <form method="post" action="{% url 'manage_document_permissions' document.id %}" style="background: #f8fafc; padding: 1.25rem; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+  <form method="post" action="{% url 'manage_document_permissions' document.id %}" class="permission-form">
     {% csrf_token %}
-    <h3 style="font-size: 1.05rem; margin-bottom: 1rem;">Grant User Permission</h3>
+    <h2>Grant user permission</h2>
 
     {% if form.non_field_errors %}
       <div class="alert alert-error">{{ form.non_field_errors }}</div>
     {% endif %}
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: flex-end;">
-      <div class="form-group" style="margin-bottom: 0;">
+    <div class="permission-form-grid">
+      <div class="form-group">
         <label for="{{ form.user.id_for_label }}">Select User</label>
         {{ form.user }}
         {% if form.user.errors %}
@@ -33,7 +34,7 @@
         {% endif %}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ form.permission.id_for_label }}">Permission Level</label>
         {{ form.permission }}
         {% if form.permission.errors %}
@@ -49,8 +50,9 @@
     </div>
   </form>
 
-  <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Existing Permissions</h3>
+  <h2 class="metadata-heading">Existing permissions</h2>
   {% if permissions %}
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -100,8 +102,9 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% else %}
-    <p style="color: #64748b; font-size: 0.95rem; padding: 1rem 0;">
+    <p class="text-muted">
       No explicit permissions have been granted for this document yet. Only you (the owner) have access.
     </p>
   {% endif %}

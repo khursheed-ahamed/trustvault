@@ -1,48 +1,70 @@
 {% extends "base.html" %}
 
-{% block title %}Login — TrustVault{% endblock %}
+{% block title %}Sign in — TrustVault{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 480px; margin: 3rem auto;">
-  <h2>Sign In to TrustVault</h2>
-  <p style="color: #64748b; margin-bottom: 1.5rem; font-size: 0.95rem;">
-    Access your encrypted and authorized documents securely.
-  </p>
-
-  {% if form.errors %}
-    <div class="alert alert-error">
-      <strong>Login failed:</strong> Please check your username and password. Note that fields are case-sensitive.
+<section class="login-layout" aria-label="Sign in to TrustVault">
+  <div class="login-intro">
+    <div class="login-brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>TrustVault</span>
     </div>
-  {% endif %}
-
-  <form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ next }}">
-
-    <div class="form-group">
-      <label for="id_username">Username</label>
-      <input type="text" name="username" id="id_username" autofocus required autocomplete="username">
+    <div class="login-promo">
+      <p class="eyebrow">Private by design</p>
+      <h1>Your important files, in safer hands.</h1>
+      <p>Keep sensitive documents organized and accessible only to the people you trust.</p>
+      <div class="security-visual" aria-hidden="true">
+        <div class="visual-orbit visual-orbit-one"></div>
+        <div class="visual-orbit visual-orbit-two"></div>
+        <div class="visual-lock"><span></span></div>
+        <div class="visual-spark visual-spark-one"></div>
+        <div class="visual-spark visual-spark-two"></div>
+      </div>
     </div>
-
-    <div class="form-group">
-      <label for="id_password">Password</label>
-      <input type="password" name="password" id="id_password" required autocomplete="current-password">
+    <div class="feature-grid" aria-label="TrustVault features">
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">01</span>
+        <div><h2>Secure upload</h2><p>Documents stay in protected storage.</p></div>
+      </article>
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">02</span>
+        <div><h2>Permission control</h2><p>Access is granted by document owners.</p></div>
+      </article>
+      <article class="feature-item">
+        <span class="feature-icon" aria-hidden="true">03</span>
+        <div><h2>Audit history</h2><p>Important activity is recorded.</p></div>
+      </article>
     </div>
-
-    <button type="submit" class="btn" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem;">
-      Sign In
-    </button>
-  </form>
-
-  <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; font-size: 0.85rem; color: #64748b;">
-    <strong>Demo Accounts Notice:</strong><br>
-    Sample user accounts are generated via the management command:<br>
-    <code>python manage.py create_demo_users</code>
-    <ul style="margin-top: 0.5rem; margin-left: 1.25rem;">
-      <li><strong>Owner:</strong> <code>owner_demo</code> / <code>DemoPassword123!</code></li>
-      <li><strong>Viewer:</strong> <code>viewer_demo</code> / <code>DemoPassword123!</code></li>
-      <li><strong>Admin:</strong> <code>admin_demo</code> / <code>DemoPassword123!</code></li>
-    </ul>
   </div>
-</div>
+  <div class="login-form-panel">
+    <div class="login-form-content">
+      <p class="eyebrow login-eyebrow">Welcome back</p>
+      <h2>Sign in</h2>
+      <p class="login-subtitle">Enter your account details to continue.</p>
+
+      {% if form.errors %}
+        <div class="alert alert-error" role="alert">
+          <strong>Sign-in failed.</strong> Check your username and password and try again.
+        </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'login' %}" class="login-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="form-group">
+          <label for="id_username">Username</label>
+          <input type="text" name="username" id="id_username" autofocus required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="id_password">Password</label>
+          <input type="password" name="password" id="id_password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn login-submit">Sign in securely</button>
+      </form>
+
+      <p class="login-signup">New to TrustVault? <a href="{% url 'accounts:signup' %}">Create an account</a></p>
+      <p class="login-privacy">Your account permissions are checked before every document access.</p>
+    </div>
+  </div>
+</section>
 {% endblock %}

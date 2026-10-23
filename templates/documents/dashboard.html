@@ -4,67 +4,87 @@
 {% block title %}Dashboard — TrustVault{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<section class="dashboard-heading">
   <div>
-    <h2>Document Dashboard</h2>
-    <p style="color: #64748b; font-size: 0.95rem;">
-      Authorized documents accessible by your account.
-    </p>
+    <p class="eyebrow">Your secure workspace</p>
+    <h1>Welcome, {{ user.username }}</h1>
+    <p class="page-lead">Your documents, permissions, and activity in one place.</p>
   </div>
   {% if user.role == "OWNER" %}
     <a href="{% url 'document_upload' %}" class="btn">
-      + Upload Document
+      <span aria-hidden="true">+</span> Upload document
     </a>
   {% endif %}
-</div>
+ </section>
 
-<!-- Search & Filter Controls -->
-<div class="card" style="margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0;">
+<section class="summary-grid" aria-label="Workspace summary">
+  <article class="summary-card">
+    <span class="summary-icon" aria-hidden="true">01</span>
+    <div><p class="summary-label">Available documents</p><strong>{{ documents|length }}</strong></div>
+  </article>
+  <article class="summary-card">
+    <span class="summary-icon summary-icon-teal" aria-hidden="true">02</span>
+    <div><p class="summary-label">Private access</p><strong>Account-scoped</strong></div>
+  </article>
+  <article class="summary-card">
+    <span class="summary-icon summary-icon-purple" aria-hidden="true">03</span>
+    <div><p class="summary-label">Activity</p><strong>Audit recorded</strong></div>
+  </article>
+</section>
+
+<section class="card search-card">
+  <div class="section-heading">
+    <div><h2>Find a document</h2><p>Filter the documents available to your account.</p></div>
+  </div>
   <form method="get" action="{% url 'document_dashboard' %}">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: flex-end;">
-      <div class="form-group" style="margin-bottom: 0;">
+    <div class="search-grid">
+      <div class="form-group">
         <label for="{{ search_form.q.id_for_label }}">Title</label>
         {{ search_form.q }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ search_form.owner.id_for_label }}">Owner</label>
         {{ search_form.owner }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ search_form.category.id_for_label }}">Category</label>
         {{ search_form.category }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ search_form.uploaded_from.id_for_label }}">Uploaded From</label>
         {{ search_form.uploaded_from }}
       </div>
 
-      <div class="form-group" style="margin-bottom: 0;">
+      <div class="form-group">
         <label for="{{ search_form.uploaded_to.id_for_label }}">Uploaded To</label>
         {{ search_form.uploaded_to }}
       </div>
     </div>
 
     {% if search_form.errors %}
-      <div class="alert alert-error" style="margin-top: 1rem; margin-bottom: 0;">
+      <div class="alert alert-error">
         <strong>Search input error:</strong> Please check your search parameters.
         {{ search_form.errors }}
       </div>
     {% endif %}
 
-    <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+    <div class="form-actions">
       <button type="submit" class="btn">Search</button>
       <a href="{% url 'document_dashboard' %}" class="btn btn-secondary">Clear</a>
     </div>
   </form>
-</div>
+</section>
 
-<!-- Documents List -->
-<div class="card">
+<section class="card document-list-card">
+  <div class="section-heading">
+    <div><h2>Your documents</h2><p>Only documents available to your account are shown.</p></div>
+    <span class="result-count">{{ documents|length }} found</span>
+  </div>
   {% if documents %}
+    <div class="table-wrap">
     <table>
       <thead>
         <tr>
@@ -84,19 +104,19 @@
             <td>
               {{ doc.owner.username }}
               {% if doc.owner == user %}
-                <span class="badge badge-info" style="margin-left: 0.25rem;">You</span>
+                <span class="badge badge-info">You</span>
               {% endif %}
             </td>
             <td>
               {% if doc.category %}
                 <span class="badge badge-info">{{ doc.category }}</span>
               {% else %}
-                <span style="color: #94a3b8;">None</span>
+                <span class="text-muted">None</span>
               {% endif %}
             </td>
             <td>{{ doc.created_at|localtime|date:"Y-m-d H:i" }}</td>
             <td style="text-align: right;">
-              <a href="{% url 'secure_document_detail' doc.id %}" class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">
+              <a href="{% url 'secure_document_detail' doc.id %}" class="btn btn-small">
                 View Details
               </a>
             </td>
@@ -104,11 +124,12 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% else %}
     <div class="empty-state">
-      <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📁</div>
+      <div class="empty-state-icon" aria-hidden="true">◇</div>
       <h3>No documents available</h3>
-      <p style="margin-bottom: 1rem;">
+      <p>
         No documents match your query or are currently shared with your account.
       </p>
       {% if user.role == "OWNER" %}
@@ -116,11 +137,11 @@
           Upload a new document
         </a>
       {% else %}
-        <p style="font-size: 0.85rem; color: #94a3b8;">
+        <p class="text-muted">
           Ask a document owner to grant your account access.
         </p>
       {% endif %}
     </div>
   {% endif %}
-</div>
+</section>
 {% endblock %}
