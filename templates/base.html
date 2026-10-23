@@ -15,7 +15,7 @@
     </a>
     <nav>
       {% if user.is_authenticated %}
-        <span class="user-info">Logged in as <strong>{{ user.username }}</strong> ({{ user.role }})</span>
+        <span class="user-info">Signed in as <strong>{{ user.username }}</strong> ({{ user.role }})</span>
         <a href="{% url 'document_dashboard' %}">Dashboard</a>
         {% if user.role == "OWNER" %}
           <a href="{% url 'document_upload' %}">Upload Document</a>
@@ -31,7 +31,9 @@
           <button type="submit" class="nav-btn-logout">Logout</button>
         </form>
       {% else %}
-        <a href="{% url 'login' %}">Login</a>
+        {% if request.resolver_match.url_name != "login" %}
+          <a href="{% url 'login' %}">Sign in</a>
+        {% endif %}
       {% endif %}
     </nav>
   </header>
@@ -43,5 +45,6 @@
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+  <script src="{% static 'js/password-toggle.js' %}" defer></script>
 </body>
 </html>
